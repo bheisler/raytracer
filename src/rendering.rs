@@ -39,14 +39,9 @@ impl Intersectable for Sphere {
             y: self.y,
             z: self.z,
         };
-        //Create a line segment between the ray origin and the center of the sphere
         let l: Vector3 = center - ray.origin;
-        //Use l as a hypotenuse and find the length-squared of the adjacent side
-        let tca = l.dot(&ray.direction);
-        //Find the length-squared of the opposite side
-        //This is equivalent to (but faster than) (l.length() * l.length()) - (tca * tca)
-        let d2 = l.dot(&l) - (tca * tca);
-        //If that length-squared is less than radius squared, the ray intersects the sphere
+        let adj2 = l.dot(&ray.direction);
+        let d2 = l.dot(&l) - (adj2 * adj2);
         d2 < (self.radius * self.radius)
     }
 }
