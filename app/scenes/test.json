@@ -2,17 +2,32 @@
   "width": 800,
   "height": 600,
   "fov": 90.0,
-  "sphere": {
-    "center": {
-      "x": 0.0,
-      "y": 0.0,
-      "z": -5.0
+  "spheres": [
+    {
+      "center": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -5.0
+      },
+      "radius": 1.0,
+      "color": {
+        "red": 0.4,
+        "green": 1.0,
+        "blue": 0.4
+      }
     },
-    "radius": 1.0,
-    "color": {
-      "red": 0.4,
-      "green": 1.0,
-      "blue": 0.4
+    {
+      "center": {
+        "x": 2.0,
+        "y": 2.0,
+        "z": -4.0
+      },
+      "radius": 2.25,
+      "color": {
+        "red": 1.0,
+        "green": 0.2,
+        "blue": 0.2
+      }
     }
-  }
+  ]
 }
