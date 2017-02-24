@@ -1,15 +1,15 @@
+use point::Point;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Color {
-    pub red: u8,
-    pub green: u8,
-    pub blue: u8,
+    pub red: f32,
+    pub green: f32,
+    pub blue: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Sphere {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    pub center: Point,
     pub radius: f64,
     pub color: Color,
 }

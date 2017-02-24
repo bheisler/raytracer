@@ -18,7 +18,7 @@ pub fn render(scene: &Scene) -> DynamicImage {
     let black = Rgba::from_channels(0, 0, 0, 0);
     for x in 0..scene.width {
         for y in 0..scene.height {
-            let ray: Ray = Ray::create_prime(x, y, scene);
+            let ray = Ray::create_prime(x, y, scene);
 
             if scene.sphere.intersect(&ray) {
                 image.put_pixel(x, y, to_rgba(&scene.sphere.color))
@@ -31,7 +31,10 @@ pub fn render(scene: &Scene) -> DynamicImage {
 }
 
 fn to_rgba(color: &Color) -> Rgba<u8> {
-    Rgba::from_channels(color.red, color.green, color.blue, 0)
+    Rgba::from_channels((color.red * 255.0) as u8,
+                        (color.green * 255.0) as u8,
+                        (color.blue * 255.0) as u8,
+                        0)
 }
 
 #[test]
@@ -41,14 +44,16 @@ fn test_can_render_scene() {
         height: 600,
         fov: 90.0,
         sphere: Sphere {
-            x: 0.0,
-            y: 0.0,
-            z: -5.0,
+            center: Point {
+                x: 0.0,
+                y: 0.0,
+                z: -5.0,
+            },
             radius: 1.0,
             color: Color {
-                red: 100,
-                green: 255,
-                blue: 100,
+                red: 0.4,
+                green: 1.0,
+                blue: 0.4,
             },
         },
     };
