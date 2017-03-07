@@ -1,6 +1,6 @@
 use point::Point;
 use vector::Vector3;
-use scene::{Scene, Sphere};
+use scene::{Scene, Element, Sphere, Plane};
 
 pub struct Ray {
     pub origin: Point,
@@ -32,6 +32,14 @@ pub trait Intersectable {
     fn intersect(&self, ray: &Ray) -> Option<f64>;
 }
 
+impl Intersectable for Element {
+    fn intersect(&self, ray: &Ray) -> Option<f64> {
+        match *self {
+            Element::Sphere(ref s) => s.intersect(ray),
+            Element::Plane(ref p) => p.intersect(ray),
+        }
+    }
+}
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<f64> {
         let l: Vector3 = self.center - ray.origin;
@@ -51,5 +59,19 @@ impl Intersectable for Sphere {
 
         let distance = if t0 < t1 { t0 } else { t1 };
         Some(distance)
+    }
+}
+impl Intersectable for Plane {
+    fn intersect(&self, ray: &Ray) -> Option<f64> {
+        let normal = self.normal.normalize();
+        let denom = normal.dot(&ray.direction);
+        if denom > 1e-6 {
+            let v = self.origin - ray.origin;
+            let distance = v.dot(&normal) / denom;
+            if distance >= 0.0 {
+                return Some(distance);
+            }
+        }
+        None
     }
 }

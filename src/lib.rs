@@ -21,7 +21,7 @@ pub fn render(scene: &Scene) -> DynamicImage {
             let ray = Ray::create_prime(x, y, scene);
 
             let intersection = scene.trace(&ray);
-            let color = intersection.map(|i| to_rgba(&i.object.color))
+            let color = intersection.map(|i| to_rgba(i.element.color()))
                 .unwrap_or(black);
             image.put_pixel(x, y, color);
         }

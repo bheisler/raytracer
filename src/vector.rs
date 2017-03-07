@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub, Mul, Neg};
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Deserialize)]
 pub struct Vector3 {
     pub x: f64,
     pub y: f64,
