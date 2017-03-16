@@ -1,9 +1,9 @@
 use point::Point;
 use vector::Vector3;
 use rendering::{Intersectable, Ray};
-use std::ops::Mul;
+use std::ops::{Mul, Add};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Copy)]
 pub struct Color {
     pub red: f32,
     pub green: f32,
@@ -18,10 +18,10 @@ impl Color {
         }
     }
 }
-impl<'a> Mul for &'a Color {
+impl Mul for Color {
     type Output = Color;
 
-    fn mul(self, other: &'a Color) -> Color {
+    fn mul(self, other: Color) -> Color {
         Color {
             red: self.red * other.red,
             blue: self.blue * other.blue,
@@ -44,6 +44,16 @@ impl Mul<Color> for f32 {
     type Output = Color;
     fn mul(self, other: Color) -> Color {
         other * self
+    }
+}
+impl Add for Color {
+    type Output = Color;
+    fn add(self, other: Color) -> Color {
+        Color {
+            red: self.red + other.red,
+            blue: self.blue + other.blue,
+            green: self.green + other.green,
+        }
     }
 }
 
@@ -100,7 +110,7 @@ pub struct Scene {
     pub height: u32,
     pub fov: f64,
     pub elements: Vec<Element>,
-    pub light: Light,
+    pub lights: Vec<Light>,
     pub shadow_bias: f64,
 }
 
