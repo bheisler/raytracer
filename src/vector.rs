@@ -1,4 +1,5 @@
 use std::ops::{Add, Sub, Mul, Neg};
+use serde::{Deserialize, Deserializer};
 
 #[derive(Copy, Clone, Debug, Deserialize)]
 pub struct Vector3 {
@@ -38,6 +39,13 @@ impl Vector3 {
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
         }
+    }
+
+    pub fn deserialize_normalized<D>(deserializer: D) -> Result<Vector3, D::Error>
+        where D: Deserializer
+    {
+        let v3 = Vector3::deserialize(deserializer)?;
+        Ok(v3.normalize())
     }
 }
 

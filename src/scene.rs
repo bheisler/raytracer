@@ -18,10 +18,10 @@ impl Color {
         }
     }
 }
-impl Mul for Color {
+impl<'a> Mul for &'a Color {
     type Output = Color;
 
-    fn mul(self, other: Color) -> Color {
+    fn mul(self, other: &'a Color) -> Color {
         Color {
             red: self.red * other.red,
             blue: self.blue * other.blue,
@@ -58,6 +58,7 @@ pub struct Sphere {
 #[derive(Deserialize, Debug)]
 pub struct Plane {
     pub origin: Point,
+    #[serde(deserialize_with="Vector3::deserialize_normalized")]
     pub normal: Vector3,
     pub color: Color,
     pub albedo: f32,
@@ -87,6 +88,7 @@ impl Element {
 
 #[derive(Deserialize, Debug)]
 pub struct Light {
+    #[serde(deserialize_with="Vector3::deserialize_normalized")]
     pub direction: Vector3,
     pub color: Color,
     pub intensity: f32,
@@ -99,6 +101,7 @@ pub struct Scene {
     pub fov: f64,
     pub elements: Vec<Element>,
     pub light: Light,
+    pub shadow_bias: f64,
 }
 
 pub struct Intersection<'a> {

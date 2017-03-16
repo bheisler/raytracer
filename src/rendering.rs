@@ -76,7 +76,7 @@ impl Intersectable for Sphere {
 }
 impl Intersectable for Plane {
     fn intersect(&self, ray: &Ray) -> Option<f64> {
-        let normal = self.normal.normalize();
+        let normal = &self.normal;
         let denom = normal.dot(&ray.direction);
         if denom > 1e-6 {
             let v = self.origin - ray.origin;
@@ -89,6 +89,6 @@ impl Intersectable for Plane {
     }
 
     fn surface_normal(&self, _: &Point) -> Vector3 {
-        -self.normal.normalize()
+        -self.normal
     }
 }
