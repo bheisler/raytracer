@@ -94,30 +94,49 @@
   ],
   "lights": [
     {
-      "direction": {
-        "x": -0.25,
-        "y": -1.0,
-        "z": -1.0
-      },
-      "color": {
-        "red": 0.3,
-        "green": 0.8,
-        "blue": 0.3
-      },
-      "intensity": 10.0
+      "Spherical": {
+        "position": {
+          "x": -2.0,
+          "y": 10.0,
+          "z": -3.0
+        },
+        "color": {
+          "red": 0.3,
+          "green": 0.8,
+          "blue": 0.3
+        },
+        "intensity": 40000.0
+      }
     },
     {
-      "direction": {
-        "x": 0.25,
-        "y": -0.5,
-        "z": -0.5
-      },
-      "color": {
-        "red": 0.8,
-        "green": 0.3,
-        "blue": 0.3
-      },
-      "intensity": 10.0
+      "Spherical": {
+        "position": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": -2.0
+        },
+        "color": {
+          "red": 0.8,
+          "green": 0.3,
+          "blue": 0.3
+        },
+        "intensity": 1000.0
+      }
+    },
+    {
+      "Directional": {
+        "direction": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": -1.0
+        },
+        "color": {
+          "red": 1.0,
+          "green": 1.0,
+          "blue": 1.0
+        },
+        "intensity": 0.0
+      }
     }
   ],
   "shadow_bias": 1e-13
