@@ -11,12 +11,14 @@
           "z": -5.0
         },
         "radius": 1.0,
-        "color": {
-          "red": 0.2,
-          "green": 1.0,
-          "blue": 0.2
-        },
-        "albedo": 0.18
+        "material": {
+          "color": {
+            "red": 0.2,
+            "green": 1.0,
+            "blue": 0.2
+          },
+          "albedo": 0.18
+        }
       }
     },
     {
@@ -27,12 +29,14 @@
           "z": -6.0
         },
         "radius": 2.0,
-        "color": {
-          "red": 0.2,
-          "green": 0.2,
-          "blue": 1.0
-        },
-        "albedo": 0.58
+        "material": {
+          "color": {
+            "red": 0.2,
+            "green": 0.2,
+            "blue": 1.0
+          },
+          "albedo": 0.58
+        }
       }
     },
     {
@@ -43,12 +47,14 @@
           "z": -4.0
         },
         "radius": 2.25,
-        "color": {
-          "red": 1.0,
-          "green": 0.2,
-          "blue": 0.2
-        },
-        "albedo": 0.18
+        "material": {
+          "color": {
+            "red": 1.0,
+            "green": 0.2,
+            "blue": 0.2
+          },
+          "albedo": 0.18
+        }
       }
     },
     {
@@ -63,12 +69,14 @@
           "y": -1.0,
           "z": 0.0
         },
-        "color": {
-          "red": 0.2,
-          "green": 0.2,
-          "blue": 0.2
-        },
-        "albedo": 0.18
+        "material": {
+          "color": {
+            "red": 0.2,
+            "green": 0.2,
+            "blue": 0.2
+          },
+          "albedo": 0.18
+        }
       }
     },
     {
@@ -83,12 +91,14 @@
           "y": 0.0,
           "z": -1.0
         },
-        "color": {
-          "red": 0.2,
-          "green": 0.3,
-          "blue": 1.0
-        },
-        "albedo": 0.38
+        "material": {
+          "color": {
+            "red": 0.2,
+            "green": 0.3,
+            "blue": 1.0
+          },
+          "albedo": 0.38
+        }
       }
     }
   ],

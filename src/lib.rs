@@ -39,12 +39,13 @@ fn get_color(scene: &Scene, ray: &Ray, intersection: &Intersection) -> Color {
         } else {
             0.0
         };
+        let material = intersection.element.material();
         let light_power = (surface_normal.dot(&direction_to_light) as f32).max(0.0) *
                           light_intensity;
-        let light_reflected = intersection.element.albedo() / std::f32::consts::PI;
+        let light_reflected = material.albedo / std::f32::consts::PI;
 
         let light_color = light.color() * light_power * light_reflected;
-        color = color + (*intersection.element.color() * light_color);
+        color = color + (material.color * light_color);
     }
 
     color.clamp()

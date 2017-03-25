@@ -58,11 +58,16 @@ impl Add for Color {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct Material {
+    pub color: Color,
+    pub albedo: f32,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Sphere {
     pub center: Point,
     pub radius: f64,
-    pub color: Color,
-    pub albedo: f32,
+    pub material: Material,
 }
 
 #[derive(Deserialize, Debug)]
@@ -70,8 +75,7 @@ pub struct Plane {
     pub origin: Point,
     #[serde(deserialize_with="Vector3::deserialize_normalized")]
     pub normal: Vector3,
-    pub color: Color,
-    pub albedo: f32,
+    pub material: Material,
 }
 
 
@@ -81,17 +85,10 @@ pub enum Element {
     Plane(Plane),
 }
 impl Element {
-    pub fn color(&self) -> &Color {
+    pub fn material(&self) -> &Material {
         match *self {
-            Element::Sphere(ref s) => &s.color,
-            Element::Plane(ref p) => &p.color,
-        }
-    }
-
-    pub fn albedo(&self) -> f32 {
-        match *self {
-            Element::Sphere(ref s) => s.albedo,
-            Element::Plane(ref p) => p.albedo,
+            Element::Sphere(ref s) => &s.material,
+            Element::Plane(ref p) => &p.material,
         }
     }
 }
