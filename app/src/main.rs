@@ -35,5 +35,5 @@ fn main() {
 
     let mut image_file =
         OpenOptions::new().write(true).truncate(true).create(true).open(image_path).unwrap();
-    image.save(&mut image_file, ImageFormat::BMP).unwrap();
+    image.save(&mut image_file, ImageFormat::PNG).unwrap();
 }
