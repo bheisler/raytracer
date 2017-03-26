@@ -1,7 +1,12 @@
 use point::Point;
 use vector::Vector3;
-use rendering::{Intersectable, Ray};
+use rendering::{Intersectable, Ray, TextureCoords};
 use std::ops::{Mul, Add};
+use std::path::PathBuf;
+use image;
+use image::{DynamicImage, Rgba, GenericImage, Pixel};
+use std::fmt;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Deserialize, Debug, Clone, Copy)]
 pub struct Color {
@@ -15,6 +20,21 @@ impl Color {
             red: self.red.min(1.0).max(0.0),
             blue: self.blue.min(1.0).max(0.0),
             green: self.green.min(1.0).max(0.0),
+        }
+    }
+
+    pub fn to_rgba(&self) -> Rgba<u8> {
+        Rgba::from_channels((self.red * 255.0) as u8,
+                            (self.green * 255.0) as u8,
+                            (self.blue * 255.0) as u8,
+                            0)
+    }
+
+    pub fn from_rgba(rgba: Rgba<u8>) -> Color {
+        Color {
+            red: (rgba.data[0] as f32) / 255.0,
+            green: (rgba.data[1] as f32) / 255.0,
+            blue: (rgba.data[2] as f32) / 255.0,
         }
     }
 }
@@ -57,9 +77,56 @@ impl Add for Color {
     }
 }
 
+pub fn load_texture<D>(deserializer: D) -> Result<DynamicImage, D::Error>
+    where D: Deserializer
+{
+    let path = PathBuf::deserialize(deserializer)?;
+    Ok(image::open(path).expect("Unable to open texture file"))
+}
+
+#[derive(Deserialize)]
+pub enum Coloration {
+    Color(Color),
+    Texture(#[serde(deserialize_with="load_texture")]
+            DynamicImage),
+}
+impl fmt::Debug for Coloration {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Coloration::Color(ref c) => write!(f, "Color({:?})", c),
+            Coloration::Texture(_) => write!(f, "Texture"),
+        }
+    }
+}
+
+fn wrap(val: f32, bound: u32) -> u32 {
+    let signed_bound = bound as i32;
+    let float_coord = val * bound as f32;
+    let wrapped_coord = (float_coord as i32) % signed_bound;
+    if wrapped_coord < 0 {
+        (wrapped_coord + signed_bound) as u32
+    } else {
+        wrapped_coord as u32
+    }
+}
+
+impl Coloration {
+    pub fn color(&self, coords: &TextureCoords) -> Color {
+        match *self {
+            Coloration::Color(ref c) => c.clone(),
+            Coloration::Texture(ref texture) => {
+                let tex_x = wrap(coords.x, texture.width());
+                let tex_y = wrap(coords.y, texture.height());
+
+                Color::from_rgba(texture.get_pixel(tex_x, tex_y))
+            }
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Material {
-    pub color: Color,
+    pub coloration: Coloration,
     pub albedo: f32,
 }
 
@@ -89,6 +156,13 @@ impl Element {
         match *self {
             Element::Sphere(ref s) => &s.material,
             Element::Plane(ref p) => &p.material,
+        }
+    }
+
+    pub fn material_mut(&mut self) -> &mut Material {
+        match *self {
+            Element::Sphere(ref mut s) => &mut s.material,
+            Element::Plane(ref mut p) => &mut p.material,
         }
     }
 }

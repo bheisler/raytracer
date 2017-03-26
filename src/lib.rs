@@ -17,6 +17,7 @@ use rendering::{Ray, Intersectable};
 fn get_color(scene: &Scene, ray: &Ray, intersection: &Intersection) -> Color {
     let hit_point = ray.origin + (ray.direction * intersection.distance);
     let surface_normal = intersection.element.surface_normal(&hit_point);
+    let texture_coords = intersection.element.texture_coords(&hit_point);
 
     let mut color = Color {
         red: 0.0,
@@ -45,7 +46,7 @@ fn get_color(scene: &Scene, ray: &Ray, intersection: &Intersection) -> Color {
         let light_reflected = material.albedo / std::f32::consts::PI;
 
         let light_color = light.color() * light_power * light_reflected;
-        color = color + (material.color * light_color);
+        color = color + (material.coloration.color(&texture_coords) * light_color);
     }
 
     color.clamp()
@@ -59,17 +60,10 @@ pub fn render(scene: &Scene) -> DynamicImage {
             let ray = Ray::create_prime(x, y, scene);
 
             let intersection = scene.trace(&ray);
-            let color = intersection.map(|i| to_rgba(&get_color(scene, &ray, &i)))
+            let color = intersection.map(|i| get_color(scene, &ray, &i).to_rgba())
                 .unwrap_or(black);
             image.put_pixel(x, y, color);
         }
     }
     image
-}
-
-fn to_rgba(color: &Color) -> Rgba<u8> {
-    Rgba::from_channels((color.red * 255.0) as u8,
-                        (color.green * 255.0) as u8,
-                        (color.blue * 255.0) as u8,
-                        0)
 }

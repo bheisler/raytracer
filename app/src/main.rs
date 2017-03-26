@@ -28,12 +28,12 @@ fn main() {
     let scene_file = File::open(scene_path).expect("File not found");
 
     let image_path = matches.value_of("image").unwrap();
-    let mut image_file =
-        OpenOptions::new().write(true).truncate(true).create(true).open(image_path).unwrap();
 
     let scene: Scene = serde_json::from_reader(scene_file).unwrap();
 
     let image = raytracer::render(&scene);
 
-    image.save(&mut image_file, ImageFormat::PNG).unwrap();
+    let mut image_file =
+        OpenOptions::new().write(true).truncate(true).create(true).open(image_path).unwrap();
+    image.save(&mut image_file, ImageFormat::BMP).unwrap();
 }
