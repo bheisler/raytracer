@@ -125,9 +125,16 @@ impl Coloration {
 }
 
 #[derive(Deserialize, Debug)]
+pub enum SurfaceType {
+    Diffuse,
+    Reflective { reflectivity: f32 },
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Material {
     pub coloration: Coloration,
     pub albedo: f32,
+    pub surface: SurfaceType,
 }
 
 #[derive(Deserialize, Debug)]
@@ -227,7 +234,9 @@ pub struct Scene {
     pub fov: f64,
     pub elements: Vec<Element>,
     pub lights: Vec<Light>,
+
     pub shadow_bias: f64,
+    pub max_recursion_depth: u32,
 }
 
 pub struct Intersection<'a> {

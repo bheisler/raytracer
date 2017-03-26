@@ -1,6 +1,6 @@
 use point::Point;
 use vector::Vector3;
-use scene::{Scene, Element, Sphere, Plane, Color, Intersection};
+use scene::{Scene, Element, Sphere, Plane, Color, Intersection, SurfaceType};
 use std::f32;
 
 pub struct Ray {
@@ -25,6 +25,17 @@ impl Ray {
                     z: -1.0,
                 }
                 .normalize(),
+        }
+    }
+
+    pub fn create_reflection(normal: Vector3,
+                             incident: Vector3,
+                             intersection: Point,
+                             bias: f64)
+                             -> Ray {
+        Ray {
+            origin: intersection + (normal * bias),
+            direction: incident - (2.0 * incident.dot(&normal) * normal),
         }
     }
 }
@@ -178,15 +189,26 @@ fn shade_diffuse(scene: &Scene,
     color.clamp()
 }
 
-fn get_color(scene: &Scene, ray: &Ray, intersection: &Intersection) -> Color {
+fn get_color(scene: &Scene, ray: &Ray, intersection: &Intersection, depth: u32) -> Color {
     let hit_point = ray.origin + (ray.direction * intersection.distance);
     let surface_normal = intersection.element.surface_normal(&hit_point);
 
-    shade_diffuse(scene, intersection.element, hit_point, surface_normal)
+    let mut color = shade_diffuse(scene, intersection.element, hit_point, surface_normal);
+    if let SurfaceType::Reflective { reflectivity } = intersection.element.material().surface {
+        let reflection_ray =
+            Ray::create_reflection(surface_normal, ray.direction, hit_point, scene.shadow_bias);
+        color = color * (1.0 - reflectivity);
+        color = color + (cast_ray(scene, &reflection_ray, depth + 1) * reflectivity);
+    }
+    color
 }
 
-pub fn cast_ray(scene: &Scene, ray: &Ray) -> Color {
+pub fn cast_ray(scene: &Scene, ray: &Ray, depth: u32) -> Color {
+    if depth >= scene.max_recursion_depth {
+        return BLACK;
+    }
+
     let intersection = scene.trace(&ray);
-    intersection.map(|i| get_color(scene, &ray, &i))
+    intersection.map(|i| get_color(scene, &ray, &i, depth))
         .unwrap_or(BLACK)
 }

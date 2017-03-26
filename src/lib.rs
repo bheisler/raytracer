@@ -19,7 +19,7 @@ pub fn render(scene: &Scene) -> DynamicImage {
     for x in 0..scene.width {
         for y in 0..scene.height {
             let ray = Ray::create_prime(x, y, scene);
-            image.put_pixel(x, y, cast_ray(scene, &ray).to_rgba());
+            image.put_pixel(x, y, cast_ray(scene, &ray, 0).to_rgba());
         }
     }
     image

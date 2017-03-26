@@ -19,7 +19,12 @@
               "blue": 0.2
             }
           },
-          "albedo": 0.18
+          "albedo": 0.18,
+          "surface": {
+            "Reflective": {
+              "reflectivity": 0.7
+            }
+          }
         }
       }
     },
@@ -35,7 +40,8 @@
           "coloration": {
             "Texture": "scenes/checkerboard.png"
           },
-          "albedo": 0.58
+          "albedo": 0.58,
+          "surface": "Diffuse"
         }
       }
     },
@@ -55,7 +61,8 @@
               "blue": 0.2
             }
           },
-          "albedo": 0.18
+          "albedo": 0.18,
+          "surface": "Diffuse"
         }
       }
     },
@@ -75,7 +82,12 @@
           "coloration": {
             "Texture": "scenes/checkerboard.png"
           },
-          "albedo": 0.18
+          "albedo": 0.18,
+          "surface": {
+            "Reflective": {
+              "reflectivity": 0.5
+            }
+          }
         }
       }
     },
@@ -99,7 +111,8 @@
               "blue": 1.0
             }
           },
-          "albedo": 0.38
+          "albedo": 0.38,
+          "surface": "Diffuse"
         }
       }
     }
@@ -151,5 +164,6 @@
       }
     }
   ],
-  "shadow_bias": 1e-13
+  "shadow_bias": 1e-13,
+  "max_recursion_depth": 10
 }
