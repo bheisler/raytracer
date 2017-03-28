@@ -3,6 +3,7 @@ use vector::Vector3;
 use scene::{Scene, Element, Sphere, Plane, Color, Intersection, SurfaceType};
 use std::f32;
 
+#[derive(Debug)]
 pub struct Ray {
     pub origin: Point,
     pub direction: Vector3,
@@ -36,6 +37,38 @@ impl Ray {
         Ray {
             origin: intersection + (normal * bias),
             direction: incident - (2.0 * incident.dot(&normal) * normal),
+        }
+    }
+
+    pub fn create_transmission(normal: Vector3,
+                               incident: Vector3,
+                               intersection: Point,
+                               bias: f64,
+                               index: f32)
+                               -> Option<Ray> {
+        let mut ref_n = normal;
+        let mut eta_t = index as f64;
+        let mut eta_i = 1.0;
+        let mut i_dot_n = incident.dot(&normal);
+        if i_dot_n < 0.0 {
+            //Outside the surface
+            i_dot_n = -i_dot_n;
+        } else {
+            //Inside the surface; invert the normal and swap the indices of refraction
+            ref_n = -normal;
+            eta_i = eta_t;
+            eta_t = 1.0;
+        }
+
+        let eta = eta_i / eta_t;
+        let k = 1.0 - (eta * eta) * (1.0 - i_dot_n * i_dot_n);
+        if k < 0.0 {
+            None
+        } else {
+            Some(Ray {
+                origin: intersection + (ref_n * -bias),
+                direction: (incident + i_dot_n * ref_n) * eta - ref_n * k.sqrt(),
+            })
         }
     }
 }
@@ -89,11 +122,15 @@ impl Intersectable for Sphere {
         let t1 = adj + thc;
 
         if t0 < 0.0 && t1 < 0.0 {
-            return None;
+            None
+        } else if t0 < 0.0 {
+            Some(t1)
+        } else if t1 < 0.0 {
+            Some(t0)
+        } else {
+            let distance = if t0 < t1 { t0 } else { t1 };
+            Some(distance)
         }
-
-        let distance = if t0 < t1 { t0 } else { t1 };
-        Some(distance)
     }
 
     fn surface_normal(&self, hit_point: &Point) -> Vector3 {
@@ -190,17 +227,63 @@ fn shade_diffuse(scene: &Scene,
 }
 
 fn get_color(scene: &Scene, ray: &Ray, intersection: &Intersection, depth: u32) -> Color {
-    let hit_point = ray.origin + (ray.direction * intersection.distance);
-    let surface_normal = intersection.element.surface_normal(&hit_point);
+    let hit = ray.origin + (ray.direction * intersection.distance);
+    let normal = intersection.element.surface_normal(&hit);
 
-    let mut color = shade_diffuse(scene, intersection.element, hit_point, surface_normal);
-    if let SurfaceType::Reflective { reflectivity } = intersection.element.material().surface {
-        let reflection_ray =
-            Ray::create_reflection(surface_normal, ray.direction, hit_point, scene.shadow_bias);
-        color = color * (1.0 - reflectivity);
-        color = color + (cast_ray(scene, &reflection_ray, depth + 1) * reflectivity);
+    let material = intersection.element.material();
+    match material.surface {
+        SurfaceType::Diffuse => shade_diffuse(scene, intersection.element, hit, normal),
+        SurfaceType::Reflective { reflectivity } => {
+            let mut color = shade_diffuse(scene, intersection.element, hit, normal);
+            let reflection_ray =
+                Ray::create_reflection(normal, ray.direction, hit, scene.shadow_bias);
+            color = color * (1.0 - reflectivity);
+            color = color + (cast_ray(scene, &reflection_ray, depth + 1) * reflectivity);
+            color
+        }
+        SurfaceType::Refractive { index, transparency } => {
+            let mut refraction_color = BLACK;
+            let kr = fresnel(ray.direction, normal, index) as f32;
+            let surface_color = material.coloration
+                .color(&intersection.element.texture_coords(&hit));
+
+            if kr < 1.0 {
+                let transmission_ray =
+                    Ray::create_transmission(normal, ray.direction, hit, scene.shadow_bias, index)
+                        .unwrap();
+                refraction_color = cast_ray(scene, &transmission_ray, depth + 1);
+            }
+
+            let reflection_ray =
+                Ray::create_reflection(normal, ray.direction, hit, scene.shadow_bias);
+            let reflection_color = cast_ray(scene, &reflection_ray, depth + 1);
+            let mut color = reflection_color * kr + refraction_color * (1.0 - kr);
+            color = color * transparency * surface_color;
+            color
+        }
     }
-    color
+}
+
+fn fresnel(incident: Vector3, normal: Vector3, index: f32) -> f64 {
+    let i_dot_n = incident.dot(&normal);
+    let mut eta_i = 1.0;
+    let mut eta_t = index as f64;
+    if i_dot_n > 0.0 {
+        eta_i = eta_t;
+        eta_t = 1.0;
+    }
+
+    let sin_t = eta_i / eta_t * (1.0 - i_dot_n * i_dot_n).max(0.0).sqrt();
+    if sin_t > 1.0 {
+        //Total internal reflection
+        return 1.0;
+    } else {
+        let cos_t = (1.0 - sin_t * sin_t).max(0.0).sqrt();
+        let cos_i = cos_t.abs();
+        let r_s = ((eta_t * cos_i) - (eta_i * cos_t)) / ((eta_t * cos_i) + (eta_i * cos_t));
+        let r_p = ((eta_i * cos_i) - (eta_t * cos_t)) / ((eta_i * cos_i) + (eta_t * cos_t));
+        return (r_s * r_s + r_p * r_p) / 2.0;
+    }
 }
 
 pub fn cast_ray(scene: &Scene, ray: &Ray, depth: u32) -> Color {
