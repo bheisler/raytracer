@@ -8,6 +8,16 @@ use image::{DynamicImage, Rgba, GenericImage, Pixel};
 use std::fmt;
 use serde::{Deserialize, Deserializer};
 
+const GAMMA: f32 = 2.2;
+
+fn gamma_encode(linear: f32) -> f32 {
+    linear.powf(1.0 / GAMMA)
+}
+
+fn gamma_decode(encoded: f32) -> f32 {
+    encoded.powf(GAMMA)
+}
+
 #[derive(Deserialize, Debug, Clone, Copy)]
 pub struct Color {
     pub red: f32,
@@ -24,17 +34,17 @@ impl Color {
     }
 
     pub fn to_rgba(&self) -> Rgba<u8> {
-        Rgba::from_channels((self.red * 255.0) as u8,
-                            (self.green * 255.0) as u8,
-                            (self.blue * 255.0) as u8,
+        Rgba::from_channels((gamma_encode(self.red) * 255.0) as u8,
+                            (gamma_encode(self.green) * 255.0) as u8,
+                            (gamma_encode(self.blue) * 255.0) as u8,
                             0)
     }
 
     pub fn from_rgba(rgba: Rgba<u8>) -> Color {
         Color {
-            red: (rgba.data[0] as f32) / 255.0,
-            green: (rgba.data[1] as f32) / 255.0,
-            blue: (rgba.data[2] as f32) / 255.0,
+            red: gamma_decode((rgba.data[0] as f32) / 255.0),
+            green: gamma_decode((rgba.data[1] as f32) / 255.0),
+            blue: gamma_decode((rgba.data[2] as f32) / 255.0),
         }
     }
 }

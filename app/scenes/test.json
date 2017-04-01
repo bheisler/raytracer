@@ -135,7 +135,7 @@
           "green": 0.8,
           "blue": 0.3
         },
-        "intensity": 40000.0
+        "intensity": 10000.0
       }
     },
     {
@@ -150,7 +150,7 @@
           "green": 0.3,
           "blue": 0.3
         },
-        "intensity": 1000.0
+        "intensity": 250.0
       }
     },
     {
