@@ -2,6 +2,7 @@ use std::ops::{Add, Sub, Mul, Neg};
 use serde::{Deserialize, Deserializer};
 
 #[derive(Copy, Clone, Debug, Deserialize)]
+#[repr(C)]
 pub struct Vector3 {
     pub x: f64,
     pub y: f64,

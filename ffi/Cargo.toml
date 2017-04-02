@@ -1,0 +1,12 @@
+[package]
+name = "raytracer-ffi"
+version = "0.1.0"
+authors = ["Brook Heisler <redattack34@gmail.com>"]
+
+[dependencies]
+raytracer = { path = ".." }
+image = "0.12.3"
+
+[lib]
+name = "raytracer_ffi"
+crate-type = ["dylib"]

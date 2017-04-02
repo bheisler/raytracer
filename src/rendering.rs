@@ -11,7 +11,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn create_prime(x: u32, y: u32, scene: &Scene) -> Ray {
-        assert!(scene.width > scene.height);
+        assert!(scene.width >= scene.height);
         let fov_adjustment = (scene.fov.to_radians() / 2.0).tan();
         let aspect_ratio = (scene.width as f64) / (scene.height as f64);
         let sensor_x = ((((x as f64 + 0.5) / scene.width as f64) * 2.0 - 1.0) * aspect_ratio) *

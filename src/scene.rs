@@ -19,6 +19,7 @@ fn gamma_decode(encoded: f32) -> f32 {
 }
 
 #[derive(Deserialize, Debug, Clone, Copy)]
+#[repr(C)]
 pub struct Color {
     pub red: f32,
     pub green: f32,
@@ -37,7 +38,7 @@ impl Color {
         Rgba::from_channels((gamma_encode(self.red) * 255.0) as u8,
                             (gamma_encode(self.green) * 255.0) as u8,
                             (gamma_encode(self.blue) * 255.0) as u8,
-                            0)
+                            255)
     }
 
     pub fn from_rgba(rgba: Rgba<u8>) -> Color {
@@ -134,7 +135,7 @@ impl Coloration {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub enum SurfaceType {
     Diffuse,
     Reflective { reflectivity: f32 },

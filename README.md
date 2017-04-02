@@ -11,3 +11,15 @@ clone the repository and run the raytracer:
     cargo run --release scenes/test.json out.png
 
 You can modify the rendered scene by editing test.json. Enjoy!
+
+### Python Quickstart:
+
+This repository also contains code for exposing the raytracer through a C
+interface to Python. If you'd like to define your scenes in python instead,
+you can do this (note that on Unix-like OS's you may need to edit the path
+in python/raytracer.py to point to the `*.so` file instead of a dll):
+
+    cd raytracer/ffi
+    cargo build --release
+    cd ../python
+    python runner.py
