@@ -7,7 +7,7 @@ use raytracer::vector::Vector3;
 use raytracer::scene::*;
 use raytracer::ViewBlock;
 use std::path::PathBuf;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
 use std::slice;
@@ -143,6 +143,23 @@ pub extern "C" fn scene_add_directional_light(scene: *mut Scene,
 }
 
 #[no_mangle]
+pub extern "C" fn scene_get_json(scene: *mut Scene) -> *mut c_char {
+    if scene.is_null() {
+        return ptr::null_mut();
+    }
+    let scene = unsafe { Box::from_raw(scene) };
+
+    let mut result = ptr::null_mut();
+    if let Ok(json) = serde_json::to_string(&*scene) {
+        result = CString::new(json).unwrap().into_raw();
+    }
+
+    //Don't free the scene
+    Box::into_raw(scene);
+    result
+}
+
+#[no_mangle]
 pub extern "C" fn scene_render(scene: *mut Scene,
                                block: *const ViewBlock,
                                buffer: *mut u8,
@@ -172,7 +189,16 @@ pub extern "C" fn scene_free(ptr: *mut Scene) {
     }
 }
 
-//Create a second
+#[no_mangle]
+pub extern "C" fn string_free(ptr: *mut c_char) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe {
+        CString::from_raw(ptr);
+    }
+}
+
 pub enum CColoration {
     CColor { color: Color },
     CTexture { path: PathBuf },
@@ -182,8 +208,11 @@ impl CColoration {
         match *self {
             CColoration::CColor { ref color } => Some(Coloration::Color(color.clone())),
             CColoration::CTexture { ref path } => {
-                if let Ok(texture) = image::open(path) {
-                    Some(Coloration::Texture(texture))
+                if let Ok(texture) = image::open(path.clone()) {
+                    Some(Coloration::Texture(Texture {
+                        path: path.clone(),
+                        texture: texture,
+                    }))
                 } else {
                     None
                 }

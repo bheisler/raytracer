@@ -18,7 +18,7 @@ fn gamma_decode(encoded: f32) -> f32 {
     encoded.powf(GAMMA)
 }
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 #[repr(C)]
 pub struct Color {
     pub red: f32,
@@ -88,26 +88,40 @@ impl Add for Color {
     }
 }
 
-pub fn load_texture<D>(deserializer: D) -> Result<DynamicImage, D::Error>
+#[derive(Serialize, Deserialize)]
+pub struct Texture {
+    pub path: PathBuf,
+
+    #[serde(skip_serializing, skip_deserializing, default="dummy_texture")]
+    pub texture: DynamicImage,
+}
+fn dummy_texture() -> DynamicImage {
+    DynamicImage::new_rgb8(0, 0)
+}
+impl fmt::Debug for Texture {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Texture({:?})", self.path)
+    }
+}
+fn load_texture<D>(deserializer: D) -> Result<Texture, D::Error>
     where D: Deserializer
 {
-    let path = PathBuf::deserialize(deserializer)?;
-    Ok(image::open(path).expect("Unable to open texture file"))
+    let texture = Texture::deserialize(deserializer)?;
+    if let Ok(img) = image::open(texture.path.clone()) {
+        Ok(Texture {
+            path: texture.path,
+            texture: img,
+        })
+    } else {
+        Err(::serde::de::Error::custom(format!("Unable to open texture file: {:?}", texture.path)))
+    }
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum Coloration {
     Color(Color),
     Texture(#[serde(deserialize_with="load_texture")]
-            DynamicImage),
-}
-impl fmt::Debug for Coloration {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Coloration::Color(ref c) => write!(f, "Color({:?})", c),
-            Coloration::Texture(_) => write!(f, "Texture"),
-        }
-    }
+            Texture),
 }
 
 fn wrap(val: f32, bound: u32) -> u32 {
@@ -126,37 +140,37 @@ impl Coloration {
         match *self {
             Coloration::Color(ref c) => c.clone(),
             Coloration::Texture(ref texture) => {
-                let tex_x = wrap(coords.x, texture.width());
-                let tex_y = wrap(coords.y, texture.height());
+                let tex_x = wrap(coords.x, texture.texture.width());
+                let tex_y = wrap(coords.y, texture.texture.height());
 
-                Color::from_rgba(texture.get_pixel(tex_x, tex_y))
+                Color::from_rgba(texture.texture.get_pixel(tex_x, tex_y))
             }
         }
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub enum SurfaceType {
     Diffuse,
     Reflective { reflectivity: f32 },
     Refractive { index: f32, transparency: f32 },
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Material {
     pub coloration: Coloration,
     pub albedo: f32,
     pub surface: SurfaceType,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Sphere {
     pub center: Point,
     pub radius: f64,
     pub material: Material,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Plane {
     pub origin: Point,
     #[serde(deserialize_with="Vector3::deserialize_normalized")]
@@ -165,7 +179,7 @@ pub struct Plane {
 }
 
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum Element {
     Sphere(Sphere),
     Plane(Plane),
@@ -186,7 +200,7 @@ impl Element {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct DirectionalLight {
     #[serde(deserialize_with="Vector3::deserialize_normalized")]
     pub direction: Vector3,
@@ -194,14 +208,14 @@ pub struct DirectionalLight {
     pub intensity: f32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SphericalLight {
     pub position: Point,
     pub color: Color,
     pub intensity: f32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum Light {
     Directional(DirectionalLight),
     Spherical(SphericalLight),
@@ -239,7 +253,7 @@ impl Light {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Scene {
     pub width: u32,
     pub height: u32,

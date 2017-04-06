@@ -38,7 +38,9 @@
         "radius": 2.0,
         "material": {
           "coloration": {
-            "Texture": "scenes/checkerboard.png"
+            "Texture": {
+              "path": "scenes/checkerboard.png"
+            }
           },
           "albedo": 0.58,
           "surface": "Diffuse"
@@ -85,7 +87,9 @@
         },
         "material": {
           "coloration": {
-            "Texture": "scenes/checkerboard.png"
+            "Texture": {
+              "path": "scenes/checkerboard.png"
+            }
           },
           "albedo": 0.18,
           "surface": {

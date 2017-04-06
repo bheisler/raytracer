@@ -49,7 +49,9 @@ ffi.cdef("""
     void scene_add_directional_light(scene, const vector_t *direction,
         const color_t *color, float intensity);
     void scene_render(scene, const block_t *block, char *buffer, size_t length);
+    char *scene_get_json(scene);
     void scene_free(scene);
+    void string_free(char *string);
 """)
 
 C = ffi.dlopen("./../ffi/target/release/raytracer_ffi.dll")
@@ -136,6 +138,14 @@ class Scene(object):
         view_block = block(self.__x, self.__y, self.__width, self.__height)
         C.scene_render(self.__obj, view_block, buffer, buffer_len)
         return ffi.buffer(buffer)
+
+    def get_json(self):
+        json_raw = C.scene_get_json(self.__obj)
+        try:
+            json_str = ffi.string(json_raw)
+            return json_str
+        finally:
+            C.string_free(json_raw)
 
     @staticmethod
     def from_json(json):
