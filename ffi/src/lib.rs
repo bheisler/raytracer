@@ -1,14 +1,31 @@
 extern crate raytracer;
 extern crate image;
+extern crate serde_json;
 
 use raytracer::point::Point;
 use raytracer::vector::Vector3;
 use raytracer::scene::*;
+use raytracer::ViewBlock;
 use std::path::PathBuf;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::ptr;
 use std::slice;
+
+#[no_mangle]
+pub extern "C" fn scene_from_json(json: *const c_char) -> *mut Scene {
+    if json.is_null() {
+        return ptr::null_mut();
+    }
+    let c_json = unsafe { CStr::from_ptr(json) };
+    if let Ok(json) = c_json.to_str() {
+        if let Ok(scene) = serde_json::from_str(json) {
+            let scene: Scene = scene;
+            return Box::into_raw(Box::new(scene));
+        }
+    }
+    ptr::null_mut()
+}
 
 #[no_mangle]
 pub extern "C" fn scene_new(width: u32,
@@ -126,15 +143,19 @@ pub extern "C" fn scene_add_directional_light(scene: *mut Scene,
 }
 
 #[no_mangle]
-pub extern "C" fn scene_render(scene: *mut Scene, buffer: *mut u8, length: usize) {
-    if scene.is_null() || buffer.is_null() {
+pub extern "C" fn scene_render(scene: *mut Scene,
+                               block: *const ViewBlock,
+                               buffer: *mut u8,
+                               length: usize) {
+    if scene.is_null() || block.is_null() || buffer.is_null() {
         return;
     }
     let scene = unsafe { Box::from_raw(scene) };
+    let block = unsafe { &*block };
     let buffer = unsafe { slice::from_raw_parts_mut(buffer, length) };
 
-    if let Some(mut image) = image::ImageBuffer::from_raw(scene.width, scene.height, buffer) {
-        raytracer::render_into(&*scene, &mut image);
+    if let Some(mut image) = image::ImageBuffer::from_raw(block.width, block.height, buffer) {
+        raytracer::render_into(block, &*scene, &mut image);
     }
 
     //Don't free the scene

@@ -32,9 +32,14 @@ ffi.cdef("""
         float albedo;
     } material_t;
 
+    typedef struct {
+        uint32_t x, y, width, height;
+    } block_t;
+
     typedef void* scene;
     scene scene_new(uint32_t width, uint32_t height,
         double fov, double shadow_bias, uint32_t max_recursion_depth);
+    scene scene_from_json(char *buffer);
     void scene_add_sphere(scene, const point_t *center, double radius,
         const material_t *material);
     void scene_add_plane(scene, const point_t *origin, const vector_t *normal,
@@ -43,7 +48,7 @@ ffi.cdef("""
         const color_t *color, float intensity);
     void scene_add_directional_light(scene, const vector_t *direction,
         const color_t *color, float intensity);
-    void scene_render(scene, char *buffer, size_t length);
+    void scene_render(scene, const block_t *block, char *buffer, size_t length);
     void scene_free(scene);
 """)
 
@@ -77,11 +82,21 @@ def material(coloration, surface, albedo):
     material.albedo = albedo
     return material
 
+def block(x, y, width, height):
+    block = ffi.new("block_t *")
+    block.x = x
+    block.y = y
+    block.width = width
+    block.height = height
+    return block
+
 class Scene(object):
-    def __init__(self, width, height, fov, shadow_bias, max_recursion_depth):
+    def __init__(self, width, height, obj):
+        self.__x = 0
+        self.__y = 0
         self.__width = width
         self.__height = height
-        self.__obj = C.scene_new(width, height, fov, shadow_bias, max_recursion_depth)
+        self.__obj = obj
 
     def __enter__(self):
         return self
@@ -102,15 +117,36 @@ class Scene(object):
     def add_directional_light(self, direction, color, intensity):
         C.scene_add_directional_light(self.__obj, direction, color, intensity)
 
-    def render(self):
+    def set_viewport(self, x, y, width, height):
+        self.__x = x
+        self.__y = y
+        self.__width = width
+        self.__height = height
+
+    def render_image(self):
         pixel_format = "RGBA" #The raytracer only supports one format
+        return Image.frombuffer(pixel_format, (self.__width, self.__height),
+            self.render_bytes(), "raw", pixel_format, 0, 1)
+
+    def render_bytes(self):
         bytes_per_pixel = 4
 
         buffer_len = self.__width * self.__height * bytes_per_pixel
         buffer = ffi.new("char[]", buffer_len)
-        C.scene_render(self.__obj, buffer, buffer_len)
-        return Image.frombuffer(pixel_format, (self.__width, self.__height), ffi.buffer(buffer),
-            "raw", pixel_format, 0, 1)
+        view_block = block(self.__x, self.__y, self.__width, self.__height)
+        C.scene_render(self.__obj, view_block, buffer, buffer_len)
+        return ffi.buffer(buffer)
+
+    @staticmethod
+    def from_json(json):
+        c_json = ffi.new("char[]", json)
+        obj = C.scene_from_json(c_json)
+        return Scene(None, None, obj)
+
+    @staticmethod
+    def create(width, height, fov, shadow_bias, max_recursion_depth):
+        obj = C.scene_new(width, height, fov, shadow_bias, max_recursion_depth)
+        return Scene(width, height, obj)
 
 class Coloration(object):
     @staticmethod

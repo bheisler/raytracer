@@ -1,7 +1,7 @@
 import itertools
 import raytracer as rt
 
-with rt.Scene(800, 800, 45.0, 1e-13, 10) as scene, \
+with rt.Scene.create(800, 800, 45.0, 1e-13, 10) as scene, \
     rt.Coloration.color(1.0, 1.0, 1.0) as white, \
     rt.Coloration.color(1.0, 0, 0) as red, \
     rt.Coloration.color(0, 1.0, 0) as green, \
@@ -37,4 +37,4 @@ with rt.Scene(800, 800, 45.0, 1e-13, 10) as scene, \
         rt.color(1.0, 1.0, 1.0),
         5
     )
-    scene.render().save("temp2.png")
+    scene.render_image().save("temp2.png")

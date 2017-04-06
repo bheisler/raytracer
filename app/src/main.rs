@@ -31,7 +31,14 @@ fn main() {
 
     let scene: Scene = serde_json::from_reader(scene_file).unwrap();
 
-    let image = raytracer::render(&scene);
+    let block = raytracer::ViewBlock {
+        x: 0,
+        y: 0,
+        width: scene.width,
+        height: scene.height,
+    };
+
+    let image = raytracer::render(&block, &scene);
 
     let mut image_file =
         OpenOptions::new().write(true).truncate(true).create(true).open(image_path).unwrap();
