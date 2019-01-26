@@ -1,10 +1,10 @@
 use point::Point;
 use vector::Vector3;
 use rendering::{Intersectable, Ray, TextureCoords};
-use std::ops::{Mul, Add};
+use std::ops::{Add, Mul};
 use std::path::PathBuf;
 use image;
-use image::{DynamicImage, Rgba, GenericImage, Pixel};
+use image::{DynamicImage, GenericImage, Pixel, Rgba};
 use std::fmt;
 use serde::{Deserialize, Deserializer};
 
@@ -35,10 +35,12 @@ impl Color {
     }
 
     pub fn to_rgba(&self) -> Rgba<u8> {
-        Rgba::from_channels((gamma_encode(self.red) * 255.0) as u8,
-                            (gamma_encode(self.green) * 255.0) as u8,
-                            (gamma_encode(self.blue) * 255.0) as u8,
-                            255)
+        Rgba::from_channels(
+            (gamma_encode(self.red) * 255.0) as u8,
+            (gamma_encode(self.green) * 255.0) as u8,
+            (gamma_encode(self.blue) * 255.0) as u8,
+            255,
+        )
     }
 
     pub fn from_rgba(rgba: Rgba<u8>) -> Color {
@@ -92,7 +94,7 @@ impl Add for Color {
 pub struct Texture {
     pub path: PathBuf,
 
-    #[serde(skip_serializing, skip_deserializing, default="dummy_texture")]
+    #[serde(skip_serializing, skip_deserializing, default = "dummy_texture")]
     pub texture: DynamicImage,
 }
 fn dummy_texture() -> DynamicImage {
@@ -104,7 +106,8 @@ impl fmt::Debug for Texture {
     }
 }
 fn load_texture<D>(deserializer: D) -> Result<Texture, D::Error>
-    where D: Deserializer
+where
+    D: Deserializer,
 {
     let texture = Texture::deserialize(deserializer)?;
     if let Ok(img) = image::open(texture.path.clone()) {
@@ -113,15 +116,17 @@ fn load_texture<D>(deserializer: D) -> Result<Texture, D::Error>
             texture: img,
         })
     } else {
-        Err(::serde::de::Error::custom(format!("Unable to open texture file: {:?}", texture.path)))
+        Err(::serde::de::Error::custom(format!(
+            "Unable to open texture file: {:?}",
+            texture.path
+        )))
     }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum Coloration {
     Color(Color),
-    Texture(#[serde(deserialize_with="load_texture")]
-            Texture),
+    Texture(#[serde(deserialize_with = "load_texture")] Texture),
 }
 
 fn wrap(val: f32, bound: u32) -> u32 {
@@ -173,11 +178,10 @@ pub struct Sphere {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Plane {
     pub origin: Point,
-    #[serde(deserialize_with="Vector3::deserialize_normalized")]
+    #[serde(deserialize_with = "Vector3::deserialize_normalized")]
     pub normal: Vector3,
     pub material: Material,
 }
-
 
 #[derive(Deserialize, Serialize, Debug)]
 pub enum Element {
@@ -202,7 +206,7 @@ impl Element {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct DirectionalLight {
-    #[serde(deserialize_with="Vector3::deserialize_normalized")]
+    #[serde(deserialize_with = "Vector3::deserialize_normalized")]
     pub direction: Vector3,
     pub color: Color,
     pub intensity: f32,

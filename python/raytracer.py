@@ -54,7 +54,7 @@ ffi.cdef("""
     void string_free(char *string);
 """)
 
-C = ffi.dlopen("./../ffi/target/release/raytracer_ffi.dll")
+C = ffi.dlopen("./../raytracer/ffi/target/release/raytracer_ffi.dll")
 
 def point(x, y, z):
     point = ffi.new("point_t *")
@@ -100,6 +100,14 @@ class Scene(object):
         self.__height = height
         self.__obj = obj
 
+    @property
+    def width(self):
+        return self.__width
+
+    @property
+    def height(self):
+        return self.__height
+
     def __enter__(self):
         return self
 
@@ -132,7 +140,6 @@ class Scene(object):
 
     def render_bytes(self):
         bytes_per_pixel = 4
-
         buffer_len = self.__width * self.__height * bytes_per_pixel
         buffer = ffi.new("char[]", buffer_len)
         view_block = block(self.__x, self.__y, self.__width, self.__height)
@@ -166,7 +173,7 @@ class Coloration(object):
 
     @staticmethod
     def texture(path):
-        c_path = ffi.new("char[]", path)
+        c_path = ffi.new("char[]", str(path).encode())
         coloration = C.coloration_texture_new(c_path)
         return Coloration(coloration)
 
